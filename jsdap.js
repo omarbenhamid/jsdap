@@ -28,7 +28,10 @@ function proxyUrl(url, callback, binary) {
     xml.send('');
 }
 
-
+/**
+ * Load the dataset and call the callback with (dataset) where dataset is the dataset "metadata";
+ * The URL should be a raw URL without query parameters : the process with append .dds to it.
+ */
 function loadDataset(url, callback, proxy) {
     // User proxy?
     if (proxy) url = proxy + '?url=' + encodeURIComponent(url);
@@ -45,7 +48,10 @@ function loadDataset(url, callback, proxy) {
     });
 }
 
-
+/**
+ * Load the dataset and call the callback with (data) where data is an array of data
+ * the url must be a url with .dods
+ */
 function loadData(url, callback, proxy) {
     // User proxy?
     if (proxy) url = proxy + '?url=' + encodeURIComponent(url);
@@ -53,7 +59,9 @@ function loadData(url, callback, proxy) {
     proxyUrl(url, function(dods) {
         var dds = '';
         while (!dds.match(/\nData:\n$/)) {
-            dds += String.fromCharCode(dods.splice(0, 1));
+	    var c = dods.splice(0, 1);
+	    if(c.length === 0) throw new Error("Error reading data, are you sur this is a .dods request ?");
+            dds += String.fromCharCode(c);
         }
         dds = dds.substr(0, dds.length-7);
 
