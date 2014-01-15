@@ -1,0 +1,30 @@
+<html>
+    <head>
+<script type="text/javascript">
+var exports=window;
+var IE_HACK=false;
+</script>
+        <script type="text/javascript" src="vbscript.js"></script>
+        <script type="text/javascript" src="xdr.js"></script>
+        <script type="text/javascript" src="parser.js"></script>
+        <script type="text/javascript" src="jsdap.js"></script>
+        <script type="text/javascript">
+            function load() {
+                var url = document.getElementById('url').value;
+                var ta = document.getElementById('textarea');
+                loadData(url, function(data) {
+                    ta.value = JSON.stringify(data);
+                });
+                return false;
+            }
+        </script>
+    </head>
+    <body>
+        <form method="GET" action="#">
+            <input type="text" id="url" size="128" value="" placeholder="DODS URL" />
+            <input type="button" value="load URL" onclick="load()" />
+        </form>
+        <textarea id="textarea" style="width: 100%; height: 400px;"></textarea>
+    </body>
+</html>
+
