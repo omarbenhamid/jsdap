@@ -1,6 +1,8 @@
 var atomicTypes = ['byte', 'int', 'uint', 'int16', 'uint16', 'int32', 'uint32', 'float32', 'float64', 'string', 'url', 'alias'];
 var structures = ['Sequence', 'Structure', 'Dataset'];
 
+var IDENTIFIER_REGEX = '[\\w-/]'
+
 
 Array.prototype.contains = function (item) {
     for (i = 0, el = this[i]; i < this.length; el = this[++i]) {
@@ -102,7 +104,7 @@ function ddsParser(dds) {
     this.parse = this._dataset;
 
     this._declaration = function() {
-        var type = this.peek('\\w+').toLowerCase();
+        var type = this.peek(IDENTIFIER_REGEX+'+').toLowerCase();
         switch (type) {
             case 'grid'     : return this._grid();
             case 'structure': return this._structure();
@@ -114,14 +116,14 @@ function ddsParser(dds) {
     this._base_declaration = function() {
         var baseType = new dapType();
 
-        baseType.type = this.consume('\\w+');
-        baseType.name = this.consume('\\w+');
+        baseType.type = this.consume(IDENTIFIER_REGEX+'+');
+        baseType.name = this.consume(IDENTIFIER_REGEX+'+');
 
         baseType.dimensions = [];
         baseType.shape = [];
         while (!this.peek(';')) {
             this.consume('\\[');
-            token = this.consume('\\w+');
+            token = this.consume(IDENTIFIER_REGEX+'+');
             if (this.peek('=')) {
                 baseType.dimensions.push(token);
                 this.consume('=');
@@ -154,7 +156,7 @@ function ddsParser(dds) {
         }
         this.consume('}');
 
-        grid.name = this.consume('\\w+');
+        grid.name = this.consume(IDENTIFIER_REGEX+'+');
         this.consume(';');
         
         return grid;
@@ -171,7 +173,7 @@ function ddsParser(dds) {
         }
         this.consume('}');
 
-        sequence.name = this.consume('\\w+');
+        sequence.name = this.consume(IDENTIFIER_REGEX+'+');
         this.consume(';');
 
         return sequence;
@@ -188,7 +190,22 @@ function ddsParser(dds) {
         }
         this.consume('}');
 
-        structure.name = this.consume('\\w+');
+        structure.name = this.consume(IDENTIFIER_REGEX+'+');
+
+	structure.dimensions = [];
+        structure.shape = [];
+        while (!this.peek(';')) {
+            this.consume('\\[');
+            token = this.consume(IDENTIFIER_REGEX+'+');
+            if (this.peek('=')) {
+                structure.dimensions.push(token);
+                this.consume('=');
+                token = this.consume('\\d+');
+            }
+            structure.shape.push(parseInt(token));
+            this.consume('\\]');
+        }
+
         this.consume(';');
 
         return structure;
@@ -215,7 +232,7 @@ function dasParser(das, dataset) {
     };
 
     this._attr_container = function() {
-        if (atomicTypes.contains(this.peek('\\w+').toLowerCase())) {
+        if (atomicTypes.contains(this.peek(IDENTIFIER_REGEX+'+').toLowerCase())) {
             this._attribute(this._target.attributes);
 
             if (this._target.type == 'Grid') {
@@ -234,7 +251,7 @@ function dasParser(das, dataset) {
     };
 
     this._container = function() {
-        var name = this.consume('[\\w_\\.]+');
+        var name = this.consume('[\\w-_\\./]+');
         this.consume('{');
 
         if (name.indexOf('.') > -1) {
@@ -269,10 +286,10 @@ function dasParser(das, dataset) {
     this._metadata = function() {
         var output = {};
         while (!this.peek('}')) {
-            if (atomicTypes.contains(this.peek('\\w+').toLowerCase())) {
+            if (atomicTypes.contains(this.peek(IDENTIFIER_REGEX+'+').toLowerCase())) {
                 this._attribute(output);                
             } else {
-                var name = this.consume('\\w+');
+                var name = this.consume(IDENTIFIER_REGEX+'+');
                 this.consume('{');
                 output[name] = this._metadata();
                 this.consume('}');
@@ -282,8 +299,8 @@ function dasParser(das, dataset) {
     };
 
     this._attribute = function(object) {
-        var type = this.consume('\\w+');
-        var name = this.consume('\\w+');
+        var type = this.consume(IDENTIFIER_REGEX+'+');
+        var name = this.consume(IDENTIFIER_REGEX+'+');
 
         var values = [];
         while (!this.peek(';')) {
