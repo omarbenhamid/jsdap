@@ -48,6 +48,18 @@ function loadDataset(url, callback, proxy) {
     });
 }
 
+/** Flatten the data array as data attributes of elements of dapvar */
+function _applydata(data,dapvar) {
+	var i = 0;
+	for(child in dapvar) {
+	  if(!dapvar[child].type) continue;
+	  dapvar[child].data=data[i++];
+	  if(dapvar[child].type == 'Structure') {
+		_applydata(dapvar[child].data,dapvar[child]);
+          }
+	}
+ 
+}
 /**
  * Load the dataset and call the callback with (data) where data is an array of data
  * the url must be a url with .dods
@@ -67,6 +79,7 @@ function loadData(url, callback, proxy) {
 
         var dapvar = new ddsParser(dds).parse();
         var data = new dapUnpacker(dods, dapvar).getValue();
-        callback(data);
+	_applydata(data,dapvar);
+       callback(dapvar);
     }, true);
 }
